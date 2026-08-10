@@ -1,7 +1,10 @@
 # ReviewPilot
 
 ReviewPilot 是一个面向内部团队的 AI Code Review 管理平台。用户登录后，可以手动提交 GitLab Merge Request，也可以通过 GitLab Webhook 自动审查指定仓库的新 MR 和新提交。
+
+## 示例
 <img width="1893" height="836" alt="image" src="https://github.com/user-attachments/assets/64b344a4-a627-4231-b009-8aac766e7739" />
+<img width="1200" height="1961" alt="image" src="https://github.com/user-attachments/assets/2a40d2a8-ba0e-41f4-808f-572121b01182" />
 
 ## v1.0 已实现
 
