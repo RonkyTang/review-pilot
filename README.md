@@ -1,8 +1,42 @@
 # ReviewPilot
 
-ReviewPilot 是一个面向内部团队的 AI Code Review 管理平台。用户登录后，可以手动提交 GitLab Merge Request，也可以通过 GitLab Webhook 自动审查指定仓库的新 MR 和新提交。
+ReviewPilot 是一个面向内部团队的 AI Code Review 工具。本仓库同时包含服务端管理平台和完全本地运行的 Flutter 原生客户端。
 
-## v1.0 已实现
+| 版本 | 代码位置 | 运行方式 | 数据位置 | 自动审查方式 |
+| --- | --- | --- | --- | --- |
+| 服务端管理平台 | 项目根目录 | 浏览器访问 ReviewPilot 服务 | 按用户加密写入服务端 SQLite | GitLab Webhook，服务需要持续运行 |
+| 原生客户端 | [`client/`](client/) | macOS、Windows、iPhone/iPad、Android 应用 | 仅保存在当前设备 | 客户端运行期间轮询 GitLab |
+
+原生客户端不连接 ReviewPilot 服务端。设备直接访问用户配置的 GitLab 和 OpenAI API，Token/API Key 存入系统安全存储，配置与审查记录保存在设备应用目录。详细使用和构建说明见 [`client/README.md`](client/README.md)。
+
+## 原生客户端快速开始（macOS）
+
+安装 Flutter stable 与完整 Xcode，接受 Xcode 许可证，并在 Xcode 登录 Apple ID。进入客户端目录：
+
+```bash
+cd client
+flutter pub get
+flutter analyze
+flutter test
+flutter run -d macos
+```
+
+构建可双击运行的 Release 应用：
+
+```bash
+flutter build macos --release
+```
+
+产物为 `client/build/macos/Build/Products/Release/ReviewPilot.app`。Personal Team 签名适合本机开发运行；分发给其他 Mac 用户需要 Apple Developer ID 签名和 Apple 公证。
+
+## 服务端管理平台（v1.0）
+
+
+### 示例
+<img width="1893" height="836" alt="image" src="https://github.com/user-attachments/assets/64b344a4-a627-4231-b009-8aac766e7739" />
+<img width="1200" height="1961" alt="image" src="https://github.com/user-attachments/assets/2a40d2a8-ba0e-41f4-808f-572121b01182" />
+
+### 已实现
 
 - 首次启动创建管理员账号，后续账号由管理员创建，不开放公开注册
 - 用户、凭据、自动审查配置和审查记录相互隔离
@@ -24,7 +58,7 @@ ReviewPilot 是一个面向内部团队的 AI Code Review 管理平台。用户�
 - 审查记录删除、搜索和 PNG 转发图片
 - 旧版示例不写入数据库、不参与统计
 
-## 下载后直接运行
+## 服务端独立程序：下载后直接运行
 
 发布包提供 macOS 与 Windows 双平台版本，用户不需要安装 Node.js，也不需要执行 npm 命令：
 
@@ -39,7 +73,7 @@ ReviewPilot 是一个面向内部团队的 AI Code Review 管理平台。用户�
 
 未使用 Apple Developer ID 公证的 GitHub 下载包，首次打开时可能被 macOS Gatekeeper 拦截。此时在 Finder 中右键程序并选择“打开”即可授权；要实现完全无提示的首次双击启动，需要使用 Apple Developer ID 签名并提交 Apple 公证。Windows 发布包当前未进行 Authenticode 签名，首次运行时可能出现 Microsoft Defender SmartScreen 提示。
 
-## 从源码构建独立程序
+## 服务端独立程序：从源码构建
 
 构建机需要 macOS、Node.js `22.13` 或更新版本以及网络连接。首次构建会下载官方 Node.js arm64 和 x64 运行时，之后使用 `.build-cache/` 中的缓存。
 
