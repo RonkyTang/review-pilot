@@ -1,0 +1,16 @@
+{
+  "name": "reviewpilot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Self-hosted AI-assisted GitLab merge request review dashboard",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.mjs",
+    "dev": "node --disable-warning=ExperimentalWarning --watch server.mjs",
+    "check": "node --check database.mjs && node --check server.mjs && node --check public/app.js",
+    "test": "node --disable-warning=ExperimentalWarning --test"
+  },
+  "engines": {
+    "node": ">=22.13"
+  }
+}

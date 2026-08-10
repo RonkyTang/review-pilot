@@ -1,0 +1,20 @@
+.env
+.env.*
+!.env.example
+
+# Runtime data and generated artifacts
+data/
+outputs/
+work/
+
+# Dependencies and test output
+node_modules/
+coverage/
+
+# Local files
+.DS_Store
+npm-debug.log*
+*.db
+*.db-shm
+*.db-wal
+*.key

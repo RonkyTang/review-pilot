@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0d1821" />
+    <title>ReviewPilot · AI Code Review</title>
+    <link rel="stylesheet" href="/styles.css?v=1.0.0" />
+  </head>
+  <body>
+    <section class="auth-screen" id="auth-screen" hidden>
+      <div class="auth-card">
+        <div class="auth-brand"><span class="brand-mark"><i></i><i></i><i></i></span><b>Review<span>Pilot</span></b></div>
+        <span class="label">SECURE WORKSPACE</span>
+        <h1 id="auth-title">登录 ReviewPilot</h1>
+        <p id="auth-description">登录后访问你的凭据、自动审查仓库和历史报告。</p>
+        <form id="auth-form">
+          <div id="setup-display-name" hidden>
+            <label for="auth-display-name">显示名称</label>
+            <input id="auth-display-name" name="displayName" maxlength="80" autocomplete="name" placeholder="例如：张三" />
+          </div>
+          <label for="auth-username">账号</label>
+          <input id="auth-username" name="username" required minlength="3" maxlength="32" autocomplete="username" placeholder="username" />
+          <label for="auth-password">密码</label>
+          <input id="auth-password" name="password" type="password" required minlength="10" autocomplete="current-password" placeholder="至少 10 个字符" />
+          <div id="setup-confirm-password" hidden>
+            <label for="auth-password-confirm">确认密码</label>
+            <input id="auth-password-confirm" name="passwordConfirm" type="password" minlength="10" autocomplete="new-password" placeholder="再次输入密码" />
+          </div>
+          <button class="primary auth-submit" type="submit">登录 <span>→</span></button>
+        </form>
+        <div class="auth-security">凭据在服务器端加密保存；浏览器只保留 HttpOnly 登录会话。</div>
+      </div>
+    </section>
+
+    <div class="app-shell" id="app-shell" hidden>
+      <aside class="sidebar">
+        <a class="brand" href="#overview" aria-label="ReviewPilot 首页">
+          <span class="brand-mark"><i></i><i></i><i></i></span>
+          <span>Review<span>Pilot</span></span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <p>工作台</p>
+          <button class="nav-item active" data-section="overview"><span class="nav-icon">⌂</span>总览</button>
+          <button class="nav-item" data-section="new"><span class="nav-icon">＋</span>发起 Review</button>
+          <button class="nav-item" data-section="automation"><span class="nav-icon">◇</span>自动审查</button>
+          <button class="nav-item" data-section="history"><span class="nav-icon">≡</span>审查记录</button>
+          <p>管理</p>
+          <button class="nav-item" data-section="settings"><span class="nav-icon">⚙</span>系统配置</button>
+        </nav>
+
+        <div class="sidebar-foot">
+          <div class="system-dot"><span></span>本地服务运行中</div>
+          <div class="signed-user"><b id="current-user">—</b><button id="logout-button" type="button">退出</button></div>
+          <small>Internal preview · v1.0.0</small>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <button class="mobile-menu" aria-label="打开导航">☰</button>
+          <div>
+            <p class="eyebrow">AI ENGINEERING WORKSPACE</p>
+            <h1 id="page-title">代码审查总览</h1>
+          </div>
+          <div class="top-actions">
+            <div class="config-badge" id="config-badge"><span></span><b>检查配置</b></div>
+            <button class="primary compact" data-action="start-review">＋ 发起 Review</button>
+          </div>
+        </header>
+
+        <section class="page-section active" id="section-overview">
+          <div class="hero-grid">
+            <article class="hero-card">
+              <div class="hero-copy">
+                <span class="hero-kicker">REVIEW WITH CONTEXT</span>
+                <h2>让每一次合并<br />都更有把握。</h2>
+                <p>粘贴 GitLab Merge Request 地址，AI 会读取代码变更和相关上下文，给出可定位、可执行的审查结论。</p>
+                <div class="hero-actions">
+                  <button class="primary" data-action="start-review">开始一次审查 <span>→</span></button>
+                  <button class="text-button" id="demo-button">查看示例报告</button>
+                </div>
+              </div>
+              <div class="hero-visual" aria-hidden="true">
+                <div class="orbit orbit-one"></div>
+                <div class="orbit orbit-two"></div>
+                <div class="radar-card radar-card-a"><b>01</b><span>读取 Diff</span></div>
+                <div class="radar-card radar-card-b"><b>02</b><span>理解上下文</span></div>
+                <div class="radar-card radar-card-c"><b>03</b><span>发现风险</span></div>
+                <div class="radar-core"><span>AI</span><i></i></div>
+              </div>
+            </article>
+
+            <article class="health-card">
+              <div class="card-heading">
+                <div><span class="label">本周质量指数</span><h3 id="quality-score">—</h3></div>
+                <span class="trend" id="quality-trend">等待数据</span>
+              </div>
+              <div class="quality-ring" id="quality-ring"><span>—</span><small>QUALITY</small></div>
+              <div class="quality-legend">
+                <span><i class="critical"></i>高风险 <b id="high-count">0</b></span>
+                <span><i class="medium"></i>中风险 <b id="medium-count">0</b></span>
+                <span><i class="low"></i>低风险 <b id="low-count">0</b></span>
+              </div>
+            </article>
+          </div>
+
+          <div class="metrics" aria-label="审查统计">
+            <article><span class="metric-icon mint">↗</span><div><small>累计审查</small><strong id="metric-total">0</strong></div><em>MERGE REQUESTS</em></article>
+            <article><span class="metric-icon coral">!</span><div><small>发现问题</small><strong id="metric-findings">0</strong></div><em>ACTIONABLE ITEMS</em></article>
+            <article><span class="metric-icon blue">✓</span><div><small>建议通过</small><strong id="metric-approved">0</strong></div><em>READY TO MERGE</em></article>
+            <article><span class="metric-icon gold">◷</span><div><small>进行中</small><strong id="metric-running">0</strong></div><em>IN PROGRESS</em></article>
+          </div>
+
+          <article class="panel recent-panel">
+            <div class="panel-head">
+              <div><span class="label">RECENT ACTIVITY</span><h3>最近审查</h3></div>
+              <button class="text-button" data-section-link="history">查看全部 <span>→</span></button>
+            </div>
+            <div class="review-list" id="recent-list"></div>
+          </article>
+        </section>
+
+        <section class="page-section" id="section-new">
+          <div class="new-layout">
+            <article class="panel review-form-card">
+              <span class="section-number">01 / NEW REVIEW</span>
+              <h2>提交 Merge Request</h2>
+              <p class="lede">ReviewPilot 会读取本次代码变更和最多 8 个相关文件，审查过程通常需要 1–3 分钟。</p>
+              <form id="review-form">
+                <label for="mr-url">GitLab Merge Request 地址</label>
+                <div class="url-field">
+                  <span>⌘</span>
+                  <input id="mr-url" name="url" type="url" required placeholder="https://gitlab.company.com/team/project/-/merge_requests/42" autocomplete="off" />
+                </div>
+                <label for="review-credential">凭据配置 <small>在系统配置中安全保存</small></label>
+                <select id="review-credential" name="credentialId" required></select>
+                <label class="checkbox-field comment-field" for="publish-gitlab-comments">
+                  <input id="publish-gitlab-comments" name="publishGitLabComments" type="checkbox" checked />
+                  <span><strong>自动同步审查结果到 GitLab</strong><small>中风险及以上写入代码行；低风险只评论报告；零问题才 Approve</small></span>
+                </label>
+
+                <div class="form-section-title"><div><span>02 / AI CONFIGURATION</span><strong>本次审查</strong></div><em>按用户隔离 · 服务端加密</em></div>
+                <label for="review-model">模型名称 <small>选填；留空使用凭据配置中的默认模型</small></label>
+                <input id="review-model" name="openaiModel" type="text" placeholder="使用配置中的默认模型" autocomplete="off" />
+                <label for="instructions">本次重点 <small>选填</small></label>
+                <textarea id="instructions" name="instructions" rows="4" placeholder="例如：重点检查支付状态流转、并发安全和异常处理"></textarea>
+                <div class="form-foot">
+                  <p><span>◆</span> Token 与 API Key 不会出现在审查记录或浏览器存储中。</p>
+                  <button class="primary" type="submit">开始 AI Review <span>→</span></button>
+                </div>
+              </form>
+            </article>
+
+            <aside class="process-card">
+              <span class="label">HOW IT WORKS</span>
+              <h3>不只是检查 Diff</h3>
+              <div class="process-step"><b>1</b><div><strong>读取变更</strong><p>通过 GitLab API 获取 MR 信息和完整 Diff。</p></div></div>
+              <div class="process-step"><b>2</b><div><strong>补充上下文</strong><p>读取相关文件，理解类型、调用关系和已有逻辑。</p></div></div>
+              <div class="process-step"><b>3</b><div><strong>结构化审查</strong><p>按严重程度整理证据、定位和修改建议。</p></div></div>
+              <div class="security-note"><span>◎</span><p><strong>GitLab 同步由你控制</strong><br />中风险及以上写入代码行；低风险只评论报告；只有零问题才 Approve，也可以在提交前关闭。</p></div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="page-section" id="section-automation">
+          <div class="automation-layout">
+            <article class="panel automation-form-card">
+              <span class="section-number">AUTOMATION / REPOSITORY</span>
+              <h2>仓库自动审查</h2>
+              <p class="lede">为仓库创建 GitLab Webhook。新建 MR、重新打开 MR 或推送新提交时会自动进入审查，同一提交不会重复执行。</p>
+              <form id="automation-form">
+                <input type="hidden" name="id" />
+                <div class="field-row">
+                  <div><label for="automation-name">配置名称</label><input id="automation-name" name="name" required maxlength="80" placeholder="例如：支付服务" /></div>
+                  <div><label for="automation-credential">凭据配置</label><select id="automation-credential" name="credentialId" required></select></div>
+                </div>
+                <label for="automation-project-url">GitLab 仓库地址</label>
+                <input id="automation-project-url" name="projectUrl" type="url" required placeholder="https://gitlab.company.com/team/project" />
+                <label for="automation-target-branch">目标分支 <small>选填；留空监控所有目标分支</small></label>
+                <input id="automation-target-branch" name="targetBranch" placeholder="main" />
+                <label for="automation-instructions">审查重点 <small>选填</small></label>
+                <textarea id="automation-instructions" name="instructions" rows="3" placeholder="例如：重点检查权限、并发和数据一致性"></textarea>
+                <label class="checkbox-field comment-field"><input name="publishGitLabComments" type="checkbox" checked /><span><strong>自动同步结果到 GitLab</strong><small>沿用当前中高风险评论和零问题 Approve 规则</small></span></label>
+                <label class="checkbox-field neutral"><input name="enabled" type="checkbox" checked /><span><strong>启用自动审查</strong><small>可以随时暂停，不会删除历史记录</small></span></label>
+                <div class="form-foot"><button class="secondary" id="automation-cancel" type="button" hidden>取消编辑</button><button class="primary" type="submit">保存自动审查 <span>→</span></button></div>
+              </form>
+            </article>
+            <aside class="process-card automation-guide">
+              <span class="label">WEBHOOK SETUP</span><h3>GitLab 中只需配置一次</h3>
+              <div class="process-step"><b>1</b><div><strong>保存仓库</strong><p>平台会生成专属 Webhook URL 和 Secret。</p></div></div>
+              <div class="process-step"><b>2</b><div><strong>添加 Webhook</strong><p>在 GitLab 项目 Webhooks 中勾选 Merge request events。</p></div></div>
+              <div class="process-step"><b>3</b><div><strong>自动执行</strong><p>每次新提交按最新 SHA 去重并自动进入队列。</p></div></div>
+            </aside>
+          </div>
+          <article class="panel automation-list-panel"><div class="panel-head"><div><span class="label">MONITORED REPOSITORIES</span><h3>已配置仓库</h3></div></div><div id="automation-list"></div></article>
+        </section>
+
+        <section class="page-section" id="section-history">
+          <article class="panel history-panel">
+            <div class="panel-head history-head">
+              <div><span class="label">REVIEW ARCHIVE</span><h3>全部审查记录</h3></div>
+              <div class="search-box"><span>⌕</span><input id="history-search" placeholder="搜索项目或 MR 标题" /></div>
+            </div>
+            <div class="history-table" id="history-list"></div>
+          </article>
+        </section>
+
+        <section class="page-section" id="section-settings">
+          <div class="settings-stack">
+            <article class="panel settings-card">
+              <span class="section-number">CREDENTIAL / CONFIG</span><h2>凭据配置</h2>
+              <p class="lede">每个用户拥有独立配置。Token 和 API Key 加密写入数据库，列表和接口只返回掩码。</p>
+              <form id="credential-form" class="embedded-form">
+                <input type="hidden" name="id" />
+                <div class="field-row"><div><label for="credential-name">配置名称</label><input id="credential-name" name="name" required maxlength="80" placeholder="例如：公司 GitLab + GPT" /></div><div><label for="credential-gitlab-origin">GitLab 地址</label><input id="credential-gitlab-origin" name="gitlabOrigin" type="url" required placeholder="https://gitlab.company.com" /></div></div>
+                <label for="credential-gitlab-token">GitLab Token <small>编辑时留空表示保留原值</small></label><input id="credential-gitlab-token" name="gitlabToken" type="password" autocomplete="new-password" placeholder="glpat-••••••••" />
+                <label class="checkbox-field"><input name="gitlabAllowInsecureTls" type="checkbox" /><span><strong>忽略 GitLab HTTPS 证书校验</strong><small>仅用于受信任的内网服务器</small></span></label>
+                <div class="field-row"><div><label for="credential-openai-base-url">OpenAI API 地址</label><input id="credential-openai-base-url" name="openaiBaseUrl" type="url" required value="https://api.openai.com/v1" /></div><div><label for="credential-openai-model">默认模型</label><input id="credential-openai-model" name="openaiModel" required value="gpt-5.4-mini" /></div></div>
+                <label for="credential-openai-key">OpenAI API Key <small>编辑时留空表示保留原值</small></label><input id="credential-openai-key" name="openaiKey" type="password" autocomplete="new-password" placeholder="sk-••••••••" />
+                <div class="inline-actions"><button class="secondary" id="credential-cancel" type="button" hidden>取消编辑</button><button class="primary" type="submit">保存凭据</button></div>
+              </form>
+              <div class="credential-list" id="credential-list"></div>
+            </article>
+
+            <div class="settings-grid">
+              <article class="panel settings-card">
+                <span class="section-number">ACCOUNT / SECURITY</span><h2>账号安全</h2>
+                <div class="setting-row"><div><strong id="account-display-name">当前账号</strong><p id="account-username">—</p></div><span class="setting-status ready">已登录</span></div>
+                <form id="password-form" class="embedded-form compact-form"><label for="current-password">当前密码</label><input id="current-password" name="currentPassword" type="password" required autocomplete="current-password" /><label for="new-password">新密码</label><input id="new-password" name="newPassword" type="password" required minlength="10" autocomplete="new-password" /><button class="secondary" type="submit">修改密码</button></form>
+              </article>
+              <article class="panel setup-card">
+                <span class="label">DATA SECURITY</span><h3>服务端安全存储</h3>
+                <ol><li><span>1</span><p>密码只保存安全哈希</p></li><li><span>2</span><p>Token 与 Key 使用 AES-GCM 加密</p></li><li><span>3</span><p>审查记录按账号隔离</p></li></ol>
+                <p class="hint">请同时备份数据库和 <strong>data/master.key</strong>；丢失主密钥后无法解密凭据。</p>
+              </article>
+            </div>
+
+            <article class="panel settings-card" id="admin-users-card" hidden>
+              <span class="section-number">ADMIN / USERS</span><h2>账号管理</h2><p class="lede">内部平台不开放公开注册，由管理员创建账号。</p>
+              <form id="user-form" class="embedded-form"><div class="field-row"><div><label for="new-user-username">账号</label><input id="new-user-username" name="username" required minlength="3" maxlength="32" /></div><div><label for="new-user-display-name">显示名称</label><input id="new-user-display-name" name="displayName" maxlength="80" /></div></div><div class="field-row"><div><label for="new-user-password">初始密码</label><input id="new-user-password" name="password" type="password" required minlength="10" autocomplete="new-password" /></div><div><label for="new-user-role">角色</label><select id="new-user-role" name="role"><option value="user">普通用户</option><option value="admin">管理员</option></select></div></div><button class="primary" type="submit">创建账号</button></form>
+              <div id="user-list" class="credential-list"></div>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="drawer-backdrop" id="drawer-backdrop"></div>
+    <aside class="review-drawer" id="review-drawer" aria-hidden="true">
+      <div class="drawer-head">
+        <div><span class="label">REVIEW REPORT</span><h2 id="drawer-title">审查报告</h2></div>
+        <div class="drawer-actions">
+          <button class="drawer-action" id="drawer-forward" type="button" hidden>↗ 生成转发图片</button>
+          <button class="drawer-action delete" id="drawer-delete" type="button" hidden>删除记录</button>
+          <button class="drawer-close" id="drawer-close" aria-label="关闭">×</button>
+        </div>
+      </div>
+      <div class="drawer-content" id="drawer-content"></div>
+    </aside>
+
+    <div class="toast" id="toast" role="status"></div>
+    <script src="/app.js?v=1.0.0" defer></script>
+  </body>
+</html>
