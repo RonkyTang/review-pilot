@@ -5,12 +5,17 @@
   "type": "module",
   "description": "Self-hosted AI-assisted GitLab merge request review dashboard",
   "scripts": {
+    "build": "node scripts/build.mjs",
     "start": "node --disable-warning=ExperimentalWarning server.mjs",
     "dev": "node --disable-warning=ExperimentalWarning --watch server.mjs",
-    "check": "node --check database.mjs && node --check server.mjs && node --check public/app.js",
+    "check": "node --check database.mjs && node --check server.mjs && node --check public/app.js && node --check scripts/build.mjs",
     "test": "node --disable-warning=ExperimentalWarning --test"
   },
   "engines": {
     "node": ">=22.13"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "postject": "^1.0.0-alpha.6"
   }
 }

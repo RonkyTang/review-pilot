@@ -10,9 +10,13 @@ work/
 # Dependencies and test output
 node_modules/
 coverage/
+dist/
+.build-cache/
+.build-work-*/
 
 # Local files
 .DS_Store
+.idea/
 npm-debug.log*
 *.db
 *.db-shm

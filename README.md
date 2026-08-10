@@ -24,19 +24,40 @@ ReviewPilot 是一个面向内部团队的 AI Code Review 管理平台。用户�
 - 审查记录删除、搜索和 PNG 转发图片
 - 旧版示例不写入数据库、不参与统计
 
-## 启动
+## 下载后直接运行
 
-需要 Node.js `22.13` 或更新版本。项目没有外部 npm 依赖。
+发布包提供 macOS 与 Windows 双平台版本，用户不需要安装 Node.js，也不需要执行 npm 命令：
 
-1. 双击 `start.command`，或者在终端进入项目目录后执行：
+- Apple Silicon（M1/M2/M3/M4 等）：`ReviewPilot-macos-arm64.zip`
+- Intel Mac：`ReviewPilot-macos-amd64.zip`
+- 普通 Intel/AMD Windows 电脑：`ReviewPilot-windows-amd64.zip`
+- Windows ARM 电脑：`ReviewPilot-windows-arm64.zip`
 
-   ```bash
-   npm start
-   ```
+解压对应 ZIP 后，macOS 双击 `ReviewPilot-macos-*`，Windows 双击 `ReviewPilot-windows-*.exe` 即可启动，浏览器会自动打开 <http://localhost:4173>。运行窗口需要保持打开；关闭窗口即可停止 ReviewPilot。
 
-2. 打开 <http://localhost:4173>。
-3. 首次启动时创建管理员账号。
-4. 登录后进入“系统配置”，添加至少一组 GitLab/OpenAI 凭据。
+首次启动时创建管理员账号，登录后进入“系统配置”，添加至少一组 GitLab/OpenAI 凭据。独立程序的数据在 macOS 默认保存在 `~/Library/Application Support/ReviewPilot`，在 Windows 默认保存在 `%APPDATA%\ReviewPilot`；重新下载或替换程序不会删除账号和审查记录。
+
+未使用 Apple Developer ID 公证的 GitHub 下载包，首次打开时可能被 macOS Gatekeeper 拦截。此时在 Finder 中右键程序并选择“打开”即可授权；要实现完全无提示的首次双击启动，需要使用 Apple Developer ID 签名并提交 Apple 公证。Windows 发布包当前未进行 Authenticode 签名，首次运行时可能出现 Microsoft Defender SmartScreen 提示。
+
+## 从源码构建独立程序
+
+构建机需要 macOS、Node.js `22.13` 或更新版本以及网络连接。首次构建会下载官方 Node.js arm64 和 x64 运行时，之后使用 `.build-cache/` 中的缓存。
+
+```bash
+npm install
+npm run build
+```
+
+构建结果位于 `dist/`：
+
+- `ReviewPilot-macos-arm64` 与对应 ZIP
+- `ReviewPilot-macos-amd64` 与对应 ZIP
+- `ReviewPilot-windows-arm64.exe` 与对应 ZIP
+- `ReviewPilot-windows-amd64.exe` 与对应 ZIP
+
+请优先发布 ZIP，以保留程序的可执行权限。构建产物已包含服务端、网页和 Node.js 运行时，不包含数据库、Token、API Key、测试文件或源码目录。
+
+日常源码开发仍可双击 `start.command`，或执行 `npm start`；这两种方式使用项目根目录下的 `data/`。
 
 从 v0.7 升级时，原 `data/reviews.json` 中的历史审查记录会在首个管理员创建后迁移到该管理员账号。原文件会保留，不会删除。
 

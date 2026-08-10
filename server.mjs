@@ -1,8 +1,10 @@
 import http from "node:http";
 import https from "node:https";
-import { promises as fs } from "node:fs";
+import { promises as fs, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { homedir } from "node:os";
+import { spawn } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import {
   ReviewPilotStore,
@@ -11,12 +13,16 @@ import {
   validatePassword
 } from "./database.mjs";
 
-const rootDir = path.dirname(fileURLToPath(import.meta.url));
+const standaloneRuntime = globalThis.__REVIEWPILOT_STANDALONE__ === true;
+const embeddedPublicAssets = globalThis.__REVIEWPILOT_ASSETS__ || null;
+const rootDir = standaloneRuntime
+  ? path.dirname(process.execPath)
+  : path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(rootDir, "public");
 
-async function loadLocalEnv() {
+function loadLocalEnv() {
   try {
-    const content = await fs.readFile(path.join(rootDir, ".env"), "utf8");
+    const content = readFileSync(path.join(rootDir, ".env"), "utf8");
     for (const rawLine of content.split(/\r?\n/)) {
       const line = rawLine.trim();
       if (!line || line.startsWith("#")) continue;
@@ -34,12 +40,16 @@ async function loadLocalEnv() {
   }
 }
 
-await loadLocalEnv();
+loadLocalEnv();
 const port = Number(process.env.PORT || 4173);
 const host = process.env.HOST || "127.0.0.1";
 const dataDir = process.env.REVIEWPILOT_DATA_DIR
   ? path.resolve(process.env.REVIEWPILOT_DATA_DIR)
-  : path.join(rootDir, "data");
+  : standaloneRuntime
+    ? process.platform === "win32"
+      ? path.join(process.env.APPDATA || path.join(homedir(), "AppData", "Roaming"), "ReviewPilot")
+      : path.join(homedir(), "Library", "Application Support", "ReviewPilot")
+    : path.join(rootDir, "data");
 const legacyReviewsFile = path.join(dataDir, "reviews.json");
 const databaseFile = path.join(dataDir, "reviewpilot.db");
 let store = null;
@@ -1476,6 +1486,18 @@ async function handleApi(request, response, pathname) {
 
 async function serveStatic(request, response, pathname) {
   const relative = pathname === "/" ? "index.html" : pathname.replace(/^\/+/, "");
+  if (relative.split("/").some((part) => part === "..")) return sendJson(response, 403, { error: "禁止访问" });
+  if (embeddedPublicAssets) {
+    const encoded = embeddedPublicAssets[relative] || embeddedPublicAssets["index.html"];
+    if (!encoded) return sendJson(response, 404, { error: "页面不存在" });
+    const content = Buffer.from(encoded, "base64");
+    response.writeHead(200, {
+      "Content-Type": mimeTypes[path.extname(relative)] || "application/octet-stream",
+      "Cache-Control": "no-cache"
+    });
+    response.end(content);
+    return;
+  }
   const filePath = path.resolve(publicDir, relative);
   if (!filePath.startsWith(`${publicDir}${path.sep}`)) return sendJson(response, 403, { error: "禁止访问" });
   try {
@@ -1508,10 +1530,39 @@ const server = http.createServer(async (request, response) => {
   }
 });
 
-const isMainModule = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
-if (isMainModule) {
+function openBrowser(url) {
+  const command = process.platform === "darwin"
+    ? "/usr/bin/open"
+    : process.platform === "win32"
+      ? "explorer.exe"
+      : null;
+  if (!command) return;
+  const opener = spawn(command, [url], { detached: true, stdio: "ignore", windowsHide: true });
+  opener.unref();
+}
+
+export async function startApplication() {
   await initializeApplicationStore();
-  server.listen(port, host, () => {
-    console.log(`\n  ReviewPilot 已启动：http://localhost:${port}\n`);
+  const url = `http://localhost:${port}`;
+  await new Promise((resolve, reject) => {
+    const handleStartupError = (error) => reject(error);
+    server.once("error", handleStartupError);
+    server.listen(port, host, () => {
+      server.off("error", handleStartupError);
+      console.log(`\n  ReviewPilot 已启动：${url}`);
+      console.log("  关闭此窗口即可停止服务。\n");
+      if (standaloneRuntime && process.env.REVIEWPILOT_NO_OPEN_BROWSER !== "1") openBrowser(url);
+      resolve();
+    });
+  });
+  return server;
+}
+
+const isMainModule = standaloneRuntime
+  || (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url));
+if (isMainModule) {
+  startApplication().catch((error) => {
+    console.error(`\n  ReviewPilot 启动失败：${error.message}\n`);
+    process.exitCode = 1;
   });
 }
