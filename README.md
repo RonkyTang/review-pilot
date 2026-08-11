@@ -1,6 +1,6 @@
 # ReviewPilot
 
-ReviewPilot 是一个面向内部团队的 AI Code Review 工具。本仓库同时包含服务端管理平台和完全本地运行的 Flutter 原生客户端。
+ReviewPilot 是一个多端自动化的 AI Code Review 工具。本仓库同时包含服务端管理平台和完全本地运行的 Flutter 原生客户端。
 
 | 版本 | 代码位置 | 运行方式 | 数据位置 | 自动审查方式 |
 | --- | --- | --- | --- | --- |
